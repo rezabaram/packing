@@ -4,7 +4,7 @@
 #include"solids.h"
 using namespace std;
 
-template<int dim=3>
+template<int dim=2>
 class Packing
 	{
 	public:
@@ -25,7 +25,7 @@ class Packing
 
 	void add_inv(const Sphere<dim> &s){
 		invs.push_back(s);
-		cout<< s <<endl;
+		//cout<< s <<endl;
 		return;
 	}
 
@@ -66,11 +66,53 @@ class Packing
 template<int dim>
 void Packing<dim>::build_init_config(){
 	
-	for (auto &px : solid.vortices){
-	
-	Matrix<double,dim,dim>
-	
-	
+	double scale=1;
+	double r=1;
+	auto x1=*(solid.faces[0]->vertices[0]);
+	auto x2=*(solid.faces[0]->vertices[1]);
+	r= (x1-x2).norm()/2;
+	scale=1/(1+r);
+	r*=scale;
+	//initial spheres
+	for (auto &px : solid.vertices){
+		auto x=scale*(*px);
+		add_init(Sphere<dim>(x,r));
 	}
+	std::cerr<<"init r="<< r <<std::endl;
+
+	//inversion spheres
+	for (auto &face: solid.faces){
+
+		Matrix<double,dim,dim> M;
+		Matrix<double,dim,1> B;
+		int i=0;
+		for (auto &px : face->vertices){
+			auto x=*px;
+			if(i>=dim)break;//dim intersecting planes are enough
+			
+			M.template block<1,dim>(i,0)=x;
+			B(i,0)=x.dot(x);
+			i++;
+		} 
+
+		auto x=*(face->vertices[0]);
+		Matrix<double,dim,1>  A=M.inverse()*B;
+		double ir= (A-x).norm();
+		add_inv(Sphere<dim>(A,ir));
+		
+		//std::cerr<< (A-*(face->vertices[0])) <<std::endl;
+
+	std::cerr<<"inv r="<< ir <<std::endl;
+	}
+
+	//central inv sphere
+	auto x=scale*(x2+x1)/2;//midpoint of an edge
+	auto o=vec<dim>::Zero(); 
+	add_inv(Sphere<dim>(o,x.norm()));
+	//enveloping sphere
+	add_init(Sphere<dim>(o,-1));
+
+	
+	
 }
 #endif /* PACKING_H */

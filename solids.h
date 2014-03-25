@@ -16,7 +16,7 @@ class Solid {
 	Solid(const std::string &_name=""):name(_name){}
 
 	void add_vertex(const _vec &v){
-		vertices.push_back(std::shared_ptr<Vertex<3>>(new Vertex<3>(v, nnodes)));
+		vertices.push_back(std::shared_ptr<Vertex<dim>>(new Vertex<dim>(v, nnodes)));
 		++nnodes;
 		}
 
@@ -25,18 +25,14 @@ class Solid {
 		std::string x;
 		for(auto i=0; i<dim; i++) {in>> x; 
 			v(i)=std::stod(x);};
+		v.normalize();
 		add_vertex(v);
 	}
 
 	void read_faces(std::istream &in){
 		std::vector<int> ind;
 		std::string x;
-
 		while(in>>x) ind.push_back(std::stoi(x));
-		//while(in>>x) 
-		//std::cerr<< std::stoi(x)<<"  ";
-		//std::cerr <<std::endl;
-
 		add_face(ind);
 	}
 
@@ -72,20 +68,26 @@ void Solid<dim>::parse(std::istream &inputFile) {
 	std::string line;
 	std::string vname;
 
-	//Parse the line
+	//read OFF file
 	
-	std::cerr<<"here1"<<std::endl;
 	if(!getline(inputFile,line)) return;
-	int n_vertices=std::stod(line);
+	std::stringstream ss0(line);
+	std::string format;
+	ss0>>format;
+	if(format!="OFF"){std::cerr<<"Input file should be OFF"<<std::endl;return;}
+
+	if(!getline(inputFile,line)) return;
+	std::stringstream ss1(line);
+	int n_vertices;
+	int n_faces;
+	int n_edges;
+	ss1>>n_vertices>>n_faces>>n_edges;
 	for(auto i=0; i<n_vertices && getline(inputFile,line); i++){
 		std::stringstream ss(line);
 		read_vertices(ss);
 	}
 
-	std::cerr<<"here"<<std::endl;
 	
-	if(!getline(inputFile,line)) return;
-	int n_faces=std::stoi(line);
 	
 	for(auto i=0; i<n_faces && getline(inputFile,line); i++){
 		std::stringstream ss(line);
@@ -93,10 +95,10 @@ void Solid<dim>::parse(std::istream &inputFile) {
 	}
 
 
+	//std::cerr<<line <<std::endl;
 //	line = line.substr( 0, line.find(comm) );
 //	if(line.size()==0) continue;
 
-	//std::cerr<<line <<std::endl;
 	//Insert the line string into a stream
 	
 	

@@ -46,8 +46,8 @@ class Face
 
 	bool close(){
 		if(closed) return true;
-		if(vertices.size()<3)return false; 
-		add_vertex(*(vertices.begin()));//add the first vertex to end
+		if(vertices.size()<dim)return false; 
+		//add_vertex(*(vertices.begin()));//add the first vertex to end
 		closed=true;
 		return closed;
 		}
